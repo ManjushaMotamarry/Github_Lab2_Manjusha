@@ -3,7 +3,7 @@ permissions:
   contents: write
 on: 
   schedule:
-    - cron: '50 14 * * *'  #minutes, hours, day, month, day of week 
+    - cron: '30 15 * * *'  #minutes, hours, day, month, day of week 
 
 jobs:
   retrain:
