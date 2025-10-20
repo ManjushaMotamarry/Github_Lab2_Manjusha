@@ -20,22 +20,13 @@ if __name__=='__main__':
         raise ValueError('Failed to catching the latest model')
         
     try:
-        # Check if the file exists within the folder
-        X, y = make_classification(
-                            n_samples=random.randint(0, 2000),
-                            n_features=6,
-                            n_informative=3,
-                            n_redundant=0,
-                            n_repeated=0,
-                            n_classes=2,
-                            random_state=0,
-                            shuffle=True,
-                        )
-    except:
-        raise ValueError('Failed to catching the data')
+        from sklearn.datasets import load_digits
+        X, y = load_digits(return_X_y=True)
+    except Exception as e:
+        raise ValueError(f'Failed to load digits dataset: {e}')
     
     y_predict = model.predict(X)
-    metrics = {"F1_Score":f1_score(y, y_predict)}
+    metrics = {"F1_Score": f1_score(y, y_predict, average='weighted')}
     
     # Save metrics to a JSON file
 
