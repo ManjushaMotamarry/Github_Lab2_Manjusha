@@ -1,4 +1,6 @@
 name: Model Retraining on Push to Main
+permissions:
+  contents: write
 
 on:
   push:
