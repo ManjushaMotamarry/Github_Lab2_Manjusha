@@ -1,14 +1,13 @@
-name: Model Calibration on Push to Main
+name: Model Retraining on Push to Main
 permissions:
   contents: write
-
 on:
   push:
     branches:
-      - main
+      - main  # Trigger the workflow on pushes to the main branch
 
 jobs:
-  calibrate:
+  retrain:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,39 +15,59 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v2
       with:
         python-version: 3.9
 
     - name: Install dependencies
       run: pip install -r requirements.txt
 
-    - name: Generate Timestamp for Calibration
-      run: echo "timestamp=$(date '+%Y%m%d%H%M%S')" >> $GITHUB_ENV
-
-    - name: Create directories
+    - name: Generate and Store Timestamp
       run: |
-        mkdir -p models/calibrated
+        timestamp=$(date '+%Y%m%d%H%M%S')
+        echo "$timestamp" > timestamp.txt
+      id: timestamp 
 
-    - name: Find Latest Model
-      id: latest_model
+    - name: Check File Permissions
       run: |
-        latest=$(ls -t models/model_*_dt_model.joblib | head -n 1)
-        echo "latest_model=$latest" >> $GITHUB_ENV
-        echo "Latest model found: $latest"
+        ls -l ./src/train_model.py
 
-    - name: Calibrate Model
+    - name: Set File Permissions
       run: |
-        python ./src/calibrate_model.py \
-          --input_model "$latest_model" \
-          --output_model "models/calibrated/calibrated_model_${timestamp}.joblib"
+        chmod +x ./src/train_model.py #making it executable
 
-    - name: Commit and Push Calibrated Model
+    - name: Retrain Model
       run: |
-        git config --global user.email "actions@github.com"
-        git config --global user.name "GitHub Actions"
-        git add models/calibrated/calibrated_model_${timestamp}.joblib
-        git commit -m "Add calibrated model version $timestamp"
+        timestamp=$(cat timestamp.txt) # Use the timestamp in your training script
+        python ./src/train_model.py --timestamp "$timestamp"
+
+    - name: Evaluate Model and Log Metrics
+      run: |
+        timestamp=$(cat timestamp.txt) # Use the timestamp in your training script
+        python ./src/evaluate_model.py  --timestamp "$timestamp" # Assuming you have a script for model evaluation
+        metrics_filename="${timestamp}_metrics.json"
+        mv $metrics_filename $GITHUB_WORKSPACE/metrics/$metrics_filename
+      continue-on-error: false  # Continue even if evaluation fails
+
+    - name: Store and Version the New Model
+      run: |
+        timestamp=$(cat timestamp.txt)
+        model_filename="model_${timestamp}_dt_model.joblib"
+        mv $model_filename $GITHUB_WORKSPACE/models/$model_filename
+
+    - name: Commit and Push Changes
+      run: |
+        git config --global user.email "manjushamg26@gmail.com"
+        git config --global user.name "Manjusha-26"
+        git add $GITHUB_WORKSPACE/metrics/$metrics_filename $GITHUB_WORKSPACE/models/$model_filename
+        git commit -m "Add metrics and updated model"
         git push
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Show Timestamp
+      run: |
+        cat timestamp.txt
+
+    - name: Notify Team
+      run: echo "Model retraining completed successfully!"
