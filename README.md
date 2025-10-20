@@ -21,7 +21,7 @@ The GitHub Actions workflow automates:
 
 ### GitHub Actions Screenshot
 
-![Workflow Screenshot](/Users/mgmanjusha/Documents/NEU/Fall'25/MLOps/Labs/Github_Lab2_Manjusha/screenshots/github_actions.png)
+![Workflow Screenshot](screenshots/github_actions.png)
 
 > Screenshot shows the workflow run and successful execution of model training and evaluation.
 
