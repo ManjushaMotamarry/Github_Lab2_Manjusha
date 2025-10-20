@@ -61,7 +61,7 @@ if __name__ == '__main__':
         
         y_predict = model.predict(X)
         mlflow.log_metrics({'Accuracy': accuracy_score(y, y_predict),
-                            'F1 Score': f1_score(y, y_predict)})
+                            'F1 Score': f1_score(y, y_predict, average='weighted')})
         
         if not os.path.exists('models/'): 
             # then create it.
